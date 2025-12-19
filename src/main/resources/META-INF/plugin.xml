@@ -28,4 +28,9 @@
         <toolWindow id="MyToolWindow" factoryClass="com.example.customexecutablerunner.MyToolWindowFactory"
                     icon="AllIcons.Toolwindows.ToolWindowPalette"/>
     </extensions>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <configurationType
+                implementation="com.example.customexecutablerunner.CustomExecutableConfigurationType"/>
+    </extensions>
 </idea-plugin>
