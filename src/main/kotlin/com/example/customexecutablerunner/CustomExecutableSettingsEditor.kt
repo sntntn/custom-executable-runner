@@ -2,6 +2,7 @@ package com.example.customexecutablerunner
 
 import com.intellij.openapi.fileChooser.FileChooser
 import com.intellij.openapi.fileChooser.FileChooserDescriptor
+import com.intellij.openapi.options.ConfigurationException
 import com.intellij.openapi.options.SettingsEditor
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.TextFieldWithBrowseButton
@@ -46,6 +47,12 @@ class CustomExecutableSettingsEditor :
                 executableField.text = file.path
             }
         }
+
+        executableField.textField.document.addDocumentListener(object : javax.swing.event.DocumentListener {
+            override fun insertUpdate(e: javax.swing.event.DocumentEvent) = fireEditorStateChanged()
+            override fun removeUpdate(e: javax.swing.event.DocumentEvent) = fireEditorStateChanged()
+            override fun changedUpdate(e: javax.swing.event.DocumentEvent) = fireEditorStateChanged()
+        })
     }
 
     override fun resetEditorFrom(config: CustomExecutableRunConfiguration) {
@@ -58,8 +65,12 @@ class CustomExecutableSettingsEditor :
     }
 
     override fun applyEditorTo(config: CustomExecutableRunConfiguration) {
-        config.executableOption =
-            executableCombo.selectedItem as ExecutableOption
+        val selectedOption = executableCombo.selectedItem as ExecutableOption
+        if (selectedOption == ExecutableOption.CUSTOM && executableField.text.isBlank()) {
+            throw ConfigurationException("Please specify the executable path for Custom option")
+        }
+
+        config.executableOption = selectedOption
         config.executablePath = executableField.text
         config.arguments = argsField.text
     }
@@ -81,8 +92,8 @@ class CustomExecutableSettingsEditor :
 
     private fun updateCustomExecutableState() {
         val selected = executableCombo.selectedItem as ExecutableOption
-        executableField.isEnabled =
-            selected == ExecutableOption.CUSTOM
+        executableField.isEnabled = selected == ExecutableOption.CUSTOM
+        fireEditorStateChanged()
     }
 
 }
