@@ -6,7 +6,6 @@ import com.intellij.execution.filters.TextConsoleBuilderFactory
 import com.intellij.execution.process.OSProcessHandler
 import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.execution.ui.ConsoleViewContentType
-import com.intellij.internal.statistic.eventLog.util.StringUtil
 
 class CustomExecutableRunState(
     environment: ExecutionEnvironment,
