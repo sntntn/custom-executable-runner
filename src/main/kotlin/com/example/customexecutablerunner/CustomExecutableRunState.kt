@@ -14,9 +14,15 @@ class CustomExecutableRunState(
 ) : CommandLineState(environment) {
 
     override fun startProcess(): OSProcessHandler {
-        val cmd = GeneralCommandLine()
-            .withExePath(config.executablePath)
-            .withParameters(StringUtil.split(config.arguments, ' '))
+        val executablePath = ExecutableResolver.resolve(
+            config.executableOption,
+            config.executablePath
+        )
+
+        val cmd = GeneralCommandLine().apply {
+            exePath = executablePath
+            parametersList.addParametersString(config.arguments)
+        }
 
         val handler = OSProcessHandler(cmd)
         val console = TextConsoleBuilderFactory.getInstance()

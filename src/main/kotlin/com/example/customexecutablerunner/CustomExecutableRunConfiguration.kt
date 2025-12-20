@@ -13,7 +13,10 @@ class CustomExecutableRunConfiguration(
     name: String
 ) : RunConfigurationBase<Any>(project, factory, name) {
 
+    var executableOption: ExecutableOption = ExecutableOption.RUSTC
+
     var executablePath: String = ""
+
     var arguments: String = ""
 
     override fun getConfigurationEditor(): SettingsEditor<out RunConfiguration> {

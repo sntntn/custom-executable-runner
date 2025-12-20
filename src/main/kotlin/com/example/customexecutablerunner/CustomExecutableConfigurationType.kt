@@ -1,6 +1,5 @@
 package com.example.customexecutablerunner
 
-import com.intellij.execution.configurations.ConfigurationType
 import com.intellij.execution.configurations.ConfigurationTypeBase
 import com.intellij.icons.AllIcons
 
