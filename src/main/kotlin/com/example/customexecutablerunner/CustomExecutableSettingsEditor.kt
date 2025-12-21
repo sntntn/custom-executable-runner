@@ -17,6 +17,8 @@ class CustomExecutableSettingsEditor :
 
     private val argsField = JTextField()
 
+    private var selectedCustomExecutablePath: String? = null
+
     private val selectedExecutableLabel =
         JLabel().apply { isVisible = false }
 
@@ -45,9 +47,11 @@ class CustomExecutableSettingsEditor :
                 val file = FileChooser.chooseFile(descriptor, null, null)
 
                 if (file != null) {
+                    selectedCustomExecutablePath = file.path
                     selectedExecutableLabel.text = "Selected executable: ${file.path}"
                     selectedExecutableLabel.isVisible = true
                 } else {
+                    selectedCustomExecutablePath = null
                     executableCombo.selectedItem = previousOption
                     return@addActionListener
                 }
@@ -69,9 +73,11 @@ class CustomExecutableSettingsEditor :
             if (config.executableOption == ExecutableOption.CUSTOM &&
                 config.executablePath.isNotBlank()
             ) {
+                selectedCustomExecutablePath = config.executablePath
                 selectedExecutableLabel.text = "Selected executable: ${config.executablePath}"
                 selectedExecutableLabel.isVisible = true
             } else {
+                selectedCustomExecutablePath = null
                 selectedExecutableLabel.isVisible = false
             }
             previousOption = config.executableOption
@@ -87,8 +93,7 @@ class CustomExecutableSettingsEditor :
         config.arguments = argsField.text
 
         if (selected == ExecutableOption.CUSTOM) {
-            config.executablePath =
-                selectedExecutableLabel.text.removePrefix("Selected executable: ")
+            config.executablePath = selectedCustomExecutablePath ?: ""
         } else {
             config.executablePath = ""
         }
