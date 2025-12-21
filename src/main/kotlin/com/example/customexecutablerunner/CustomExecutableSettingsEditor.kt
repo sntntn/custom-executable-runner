@@ -32,10 +32,13 @@ class CustomExecutableSettingsEditor :
         description = "Choose an executable file"
     }
 
+    private var isResetting = false
+
     private lateinit var previousOption: ExecutableOption
 
     init {
         executableCombo.addActionListener {
+            if (isResetting) return@addActionListener
             val selected = executableCombo.selectedItem as ExecutableOption
 
             if (selected == ExecutableOption.CUSTOM) {
@@ -58,19 +61,23 @@ class CustomExecutableSettingsEditor :
     }
 
     override fun resetEditorFrom(config: CustomExecutableRunConfiguration) {
-        executableCombo.selectedItem = config.executableOption
-        argsField.text = config.arguments
+        isResetting = true
+        try {
+            executableCombo.selectedItem = config.executableOption
+            argsField.text = config.arguments
 
-        if (config.executableOption == ExecutableOption.CUSTOM &&
-            config.executablePath.isNotBlank()
-        ) {
-            selectedExecutableLabel.text = "Selected executable: ${config.executablePath}"
-            selectedExecutableLabel.isVisible = true
-        } else {
-            selectedExecutableLabel.isVisible = false
+            if (config.executableOption == ExecutableOption.CUSTOM &&
+                config.executablePath.isNotBlank()
+            ) {
+                selectedExecutableLabel.text = "Selected executable: ${config.executablePath}"
+                selectedExecutableLabel.isVisible = true
+            } else {
+                selectedExecutableLabel.isVisible = false
+            }
+            previousOption = config.executableOption
+        }finally {
+            isResetting = false
         }
-
-        previousOption = config.executableOption
     }
 
     override fun applyEditorTo(config: CustomExecutableRunConfiguration) {
