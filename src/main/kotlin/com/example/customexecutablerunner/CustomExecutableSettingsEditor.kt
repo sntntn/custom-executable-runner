@@ -2,10 +2,8 @@ package com.example.customexecutablerunner
 
 import com.intellij.openapi.fileChooser.FileChooser
 import com.intellij.openapi.fileChooser.FileChooserDescriptor
-import com.intellij.openapi.options.ConfigurationException
 import com.intellij.openapi.options.SettingsEditor
 import com.intellij.openapi.ui.ComboBox
-import com.intellij.openapi.ui.TextFieldWithBrowseButton
 import javax.swing.BoxLayout
 import javax.swing.JLabel
 import javax.swing.JPanel
@@ -17,8 +15,10 @@ class CustomExecutableSettingsEditor :
     private val executableCombo =
         ComboBox(ExecutableOption.entries.toTypedArray())
 
-    private val executableField = TextFieldWithBrowseButton()
     private val argsField = JTextField()
+
+    private val selectedExecutableLabel =
+        JLabel().apply { isVisible = false }
 
     private val descriptor = FileChooserDescriptor(
         true,
@@ -32,47 +32,59 @@ class CustomExecutableSettingsEditor :
         description = "Choose an executable file"
     }
 
+    private lateinit var previousOption: ExecutableOption
+
     init {
         executableCombo.addActionListener {
-            updateCustomExecutableState()
-        }
+            val selected = executableCombo.selectedItem as ExecutableOption
 
-        executableField.addActionListener {
-            val file = FileChooser.chooseFile(
-                descriptor,
-                null,
-                null
-            )
-            if (file != null) {
-                executableField.text = file.path
+            if (selected == ExecutableOption.CUSTOM) {
+                val file = FileChooser.chooseFile(descriptor, null, null)
+
+                if (file != null) {
+                    selectedExecutableLabel.text = "Selected executable: ${file.path}"
+                    selectedExecutableLabel.isVisible = true
+                } else {
+                    executableCombo.selectedItem = previousOption
+                    return@addActionListener
+                }
+            } else {
+                selectedExecutableLabel.isVisible = false
             }
-        }
 
-        executableField.textField.document.addDocumentListener(object : javax.swing.event.DocumentListener {
-            override fun insertUpdate(e: javax.swing.event.DocumentEvent) = fireEditorStateChanged()
-            override fun removeUpdate(e: javax.swing.event.DocumentEvent) = fireEditorStateChanged()
-            override fun changedUpdate(e: javax.swing.event.DocumentEvent) = fireEditorStateChanged()
-        })
+            previousOption = selected
+            fireEditorStateChanged()
+        }
     }
 
     override fun resetEditorFrom(config: CustomExecutableRunConfiguration) {
         executableCombo.selectedItem = config.executableOption
-        executableField.text = config.executablePath
         argsField.text = config.arguments
 
-        executableField.isEnabled =
-            config.executableOption == ExecutableOption.CUSTOM
+        if (config.executableOption == ExecutableOption.CUSTOM &&
+            config.executablePath.isNotBlank()
+        ) {
+            selectedExecutableLabel.text = "Selected executable: ${config.executablePath}"
+            selectedExecutableLabel.isVisible = true
+        } else {
+            selectedExecutableLabel.isVisible = false
+        }
+
+        previousOption = config.executableOption
     }
 
     override fun applyEditorTo(config: CustomExecutableRunConfiguration) {
-        val selectedOption = executableCombo.selectedItem as ExecutableOption
-        if (selectedOption == ExecutableOption.CUSTOM && executableField.text.isBlank()) {
-            throw ConfigurationException("Please specify the executable path for Custom option")
-        }
+        val selected = executableCombo.selectedItem as ExecutableOption
 
-        config.executableOption = selectedOption
-        config.executablePath = executableField.text
+        config.executableOption = selected
         config.arguments = argsField.text
+
+        if (selected == ExecutableOption.CUSTOM) {
+            config.executablePath =
+                selectedExecutableLabel.text.removePrefix("Selected executable: ")
+        } else {
+            config.executablePath = ""
+        }
     }
 
     override fun createEditor(): JPanel {
@@ -82,18 +94,10 @@ class CustomExecutableSettingsEditor :
             add(JLabel("Executable:"))
             add(executableCombo)
 
-            add(JLabel(" Custom executable path - if 'Custom executable' is selected"))
-            add(executableField)
+            add(selectedExecutableLabel)
 
             add(JLabel("Arguments:"))
             add(argsField)
         }
     }
-
-    private fun updateCustomExecutableState() {
-        val selected = executableCombo.selectedItem as ExecutableOption
-        executableField.isEnabled = selected == ExecutableOption.CUSTOM
-        fireEditorStateChanged()
-    }
-
 }
