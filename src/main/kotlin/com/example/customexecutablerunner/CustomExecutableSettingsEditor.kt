@@ -4,7 +4,9 @@ import com.intellij.openapi.fileChooser.FileChooser
 import com.intellij.openapi.fileChooser.FileChooserDescriptor
 import com.intellij.openapi.options.SettingsEditor
 import com.intellij.openapi.ui.ComboBox
+import javax.swing.Box
 import javax.swing.BoxLayout
+import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.JTextField
@@ -103,13 +105,21 @@ class CustomExecutableSettingsEditor :
         return JPanel().apply {
             layout = BoxLayout(this, BoxLayout.Y_AXIS)
 
-            add(JLabel("Executable:"))
+            add(leftAligned(JLabel("Executable:")))
             add(executableCombo)
 
             add(selectedExecutableLabel)
 
-            add(JLabel("Arguments:"))
+            add(Box.createVerticalStrut(8))
+
+            add(leftAligned(JLabel("Arguments:")))
             add(argsField)
         }
     }
+
+    private fun leftAligned(component: JComponent): JPanel =
+        JPanel(java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 0, 0)).apply {
+            isOpaque = false
+            add(component)
+        }
 }
