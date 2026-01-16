@@ -2,8 +2,11 @@ package com.example.customexecutablerunner
 
 import com.intellij.openapi.fileChooser.FileChooser
 import com.intellij.openapi.fileChooser.FileChooserDescriptor
+import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
 import com.intellij.openapi.options.SettingsEditor
 import com.intellij.openapi.ui.ComboBox
+import com.intellij.openapi.ui.TextBrowseFolderListener
+import com.intellij.openapi.ui.TextFieldWithBrowseButton
 import com.intellij.ui.RawCommandLineEditor
 import javax.swing.Box
 import javax.swing.BoxLayout
@@ -20,10 +23,16 @@ class CustomExecutableSettingsEditor :
 
     private val argsField = RawCommandLineEditor()
 
-    private var selectedCustomExecutablePath: String? = null
+    val customExecutableDescriptor = FileChooserDescriptorFactory.createSingleFileDescriptor().apply {
+        title = "Select Executable"
+        description = "Choose an executable file"
+    }
 
-    private val selectedExecutableLabel =
-        JLabel().apply { isVisible = false }
+    private val customExecutableField = TextFieldWithBrowseButton().apply {
+        isVisible = false
+
+        addBrowseFolderListener(TextBrowseFolderListener(customExecutableDescriptor))
+    }
 
     private val descriptor = FileChooserDescriptor(
         true,
@@ -47,19 +56,24 @@ class CustomExecutableSettingsEditor :
             val selected = executableCombo.selectedItem as ExecutableOption
 
             if (selected == ExecutableOption.CUSTOM) {
-                val file = FileChooser.chooseFile(descriptor, null, null)
+                customExecutableField.isVisible = true
+
+                val file = FileChooser.chooseFile(customExecutableDescriptor, null, null)
 
                 if (file != null) {
-                    selectedCustomExecutablePath = file.path
-                    selectedExecutableLabel.text = "Selected executable: ${file.path}"
-                    selectedExecutableLabel.isVisible = true
+                    customExecutableField.text = file.path
                 } else {
-                    selectedCustomExecutablePath = null
-                    executableCombo.selectedItem = previousOption
-                    return@addActionListener
+                    isResetting = true
+                    try {
+                        executableCombo.selectedItem = previousOption
+                        customExecutableField.isVisible = previousOption == ExecutableOption.CUSTOM
+                    } finally {
+                        isResetting = false
+                    }
                 }
+
             } else {
-                selectedExecutableLabel.isVisible = false
+                customExecutableField.isVisible = false
             }
 
             previousOption = selected
@@ -76,15 +90,13 @@ class CustomExecutableSettingsEditor :
             if (config.executableOption == ExecutableOption.CUSTOM &&
                 config.executablePath.isNotBlank()
             ) {
-                selectedCustomExecutablePath = config.executablePath
-                selectedExecutableLabel.text = "Selected executable: ${config.executablePath}"
-                selectedExecutableLabel.isVisible = true
+                customExecutableField.text = config.executablePath
+                customExecutableField.isVisible = true
             } else {
-                selectedCustomExecutablePath = null
-                selectedExecutableLabel.isVisible = false
+                customExecutableField.isVisible = false
             }
             previousOption = config.executableOption
-        }finally {
+        } finally {
             isResetting = false
         }
     }
@@ -95,10 +107,10 @@ class CustomExecutableSettingsEditor :
         config.executableOption = selected
         config.arguments = argsField.text
 
-        if (selected == ExecutableOption.CUSTOM) {
-            config.executablePath = selectedCustomExecutablePath ?: ""
+        config.executablePath = if (selected == ExecutableOption.CUSTOM) {
+            customExecutableField.text
         } else {
-            config.executablePath = ""
+            ""
         }
     }
 
@@ -109,7 +121,7 @@ class CustomExecutableSettingsEditor :
             add(leftAligned(JLabel("Executable:")))
             add(executableCombo)
 
-            add(selectedExecutableLabel)
+            add(customExecutableField)
 
             add(Box.createVerticalStrut(8))
 
