@@ -2,7 +2,6 @@ package com.example.customexecutablerunner
 
 import com.intellij.openapi.fileChooser.FileChooser
 import com.intellij.openapi.fileChooser.FileChooserDescriptor
-import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
 import com.intellij.openapi.options.SettingsEditor
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.TextBrowseFolderListener
@@ -13,7 +12,6 @@ import javax.swing.BoxLayout
 import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JPanel
-import javax.swing.JTextField
 
 class CustomExecutableSettingsEditor :
     SettingsEditor<CustomExecutableRunConfiguration>() {
@@ -23,13 +21,22 @@ class CustomExecutableSettingsEditor :
 
     private val argsField = RawCommandLineEditor()
 
-    val customExecutableDescriptor = FileChooserDescriptorFactory.createSingleFileDescriptor().apply {
+    val customExecutableDescriptor = FileChooserDescriptor(
+        true,
+        false,
+        false,
+        false,
+        false,
+        false
+    ).apply {
         title = "Select Executable"
         description = "Choose an executable file"
     }
 
     private val customExecutableField = TextFieldWithBrowseButton().apply {
         isVisible = false
+        textField.isEditable = false
+        textField.isFocusable = false
 
         addBrowseFolderListener(TextBrowseFolderListener(customExecutableDescriptor))
     }
