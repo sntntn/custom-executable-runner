@@ -4,6 +4,7 @@ import com.intellij.openapi.fileChooser.FileChooser
 import com.intellij.openapi.fileChooser.FileChooserDescriptor
 import com.intellij.openapi.options.SettingsEditor
 import com.intellij.openapi.ui.ComboBox
+import com.intellij.ui.RawCommandLineEditor
 import javax.swing.Box
 import javax.swing.BoxLayout
 import javax.swing.JComponent
@@ -17,7 +18,7 @@ class CustomExecutableSettingsEditor :
     private val executableCombo =
         ComboBox(ExecutableOption.entries.toTypedArray())
 
-    private val argsField = JTextField()
+    private val argsField = RawCommandLineEditor()
 
     private var selectedCustomExecutablePath: String? = null
 
